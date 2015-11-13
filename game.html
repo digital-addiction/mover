@@ -1,0 +1,131 @@
+<!doctype html> 
+<!-- http://localhost:8080/phasertut2/part1.html -->
+<!-- http://www.html5gamedevs.com/topic/4043-movement-pathfind/ -->
+<!-- http://www.html5gamedevs.com/topic/1830-best-way-for-random-movement-of-group-objects/ -->
+<!-- http://www.html5gamedevs.com/topic/6993-goomba-move/ -->
+<!-- http://phaser.io/examples/v2/arcade-physics/move-towards-object -->
+<!-- http://www.photonstorm.com/phaser/phaser-coding-tips-4 -->
+<html lang="en"> 
+<head> 
+	<meta charset="UTF-8" />
+	<title>Phaser - Making your first game, part 1</title>
+	<script type="text/javascript" src="../phaser/build/phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-example', { preload: preload, create: create, update: update });
+
+function preload() {
+
+    game.load.tilemap('board', '../tiled/json-tilemaps/mapone.json', null, Phaser.Tilemap.TILED_JSON);
+
+    game.load.image('tiles', '../tiled/my-images/groundtileset.png');
+  
+    game.load.image('acorn', './acorn.png');
+    game.load.image('squirrel', '../squirrel/assets/sprites/squirrel-stand.png');
+}
+
+var cursors;
+var map;
+var layer;
+var squirrel;
+var acorn;
+var sqspeed = 600;
+var acorns;
+
+function create() {
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+    cursors = game.input.keyboard.createCursorKeys();
+
+    game.stage.backgroundColor = '#787878';
+
+    map = game.add.tilemap('board');
+
+    map.addTilesetImage('grounds', 'tiles');
+
+    layer = map.createLayer('layer1');
+
+    squirrel = game.add.sprite(0,0,'squirrel');
+//    acorn = game.add.sprite(game.world.centerX, game.world.centerY, 'acorn');
+    acorns = game.add.group();
+    
+    for (var i = 0; i < 10; i++) {
+        acorns.create(game.rnd.integerInRange(64, game.world.width-64), 
+                      game.rnd.integerInRange(64, game.world.height-64),
+                      'acorn');
+    }
+    
+    game.physics.arcade.enable(squirrel);
+    game.physics.arcade.enable(acorns);
+    squirrel.body.collideWorldBounds = true;
+    layer.resizeWorld();
+}
+    
+function update () {
+
+//    if (game.input.mousePointer.isDown) {
+//        game.physics.arcade.moveToPointer(acorn);
+//    } else {
+//        acorn.body.velocity.x = 0;
+//        acorn.body.velocity.y = 0;
+//    }
+    
+    game.physics.arcade.overlap(squirrel, acorns, owy, null, game);
+    game.physics.arcade.collide(acorns, acorns, foo);
+    
+    squirrel.body.velocity.x = 0;
+    squirrel.body.velocity.y = 0;
+    
+    var moved = false;
+    
+    if (cursors.up.isDown) {
+        squirrel.body.velocity.y -= sqspeed;
+        moved = true;
+    }
+
+    else if (cursors.down.isDown) {
+        squirrel.body.velocity.y += sqspeed;
+        moved = true;
+    }
+
+    else if (cursors.left.isDown) {
+        squirrel.body.velocity.x -= sqspeed;
+        moved = true;
+    }
+
+    else if (cursors.right.isDown) {
+        squirrel.body.velocity.x += sqspeed;
+        moved = true;
+    }
+    
+    if (moved) {
+        acorns.forEachAlive(function(acorn) {
+            game.physics.arcade.moveToObject(acorn, squirrel, 600);
+        });
+    } else {
+        acorns.forEachAlive(function(acorn) {
+            acorn.body.velocity.x = 0;
+            acorn.body.velocity.y = 0;
+        });
+    }
+}
+    
+function owy (sq, ac) {
+    sq.kill();
+}
+    
+function foo (ac1, ac2) {
+    ac1.kill();
+    ac2.kill();
+    return false;
+}
+</script>
+
+</body>
+</html>
